@@ -13,27 +13,37 @@ export default function ClanListPage() {
   const [clanovi, setClanovi] = useState<any[]>([])
   const [kriterijum, setKriterijum] = useState('')
   const [loading, setLoading] = useState(false)
+  const [pretrazivaoBio, setPretrazivaoBio] = useState(false)
 
   const pretrazi = async () => {
     if (!kriterijum.trim()) return
     setLoading(true)
+    setPretrazivaoBio(true)
     try {
       const res = await pretraziClanove(kriterijum)
       setClanovi(res.data)
-    } catch (err) {
-      console.error(err)
+    } catch {
+      setClanovi([])
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handlePromena = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setKriterijum(e.target.value)
+    if (e.target.value === '') {
+      setClanovi([])
+      setPretrazivaoBio(false)
     }
   }
 
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
-        <Typography variant="h4" sx={{ fontWeight: 'bold' }}>Članovi</Typography>
+        <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#0d2b4e' }}>Članovi</Typography>
         <Button variant="contained" startIcon={<AddIcon />}
           onClick={() => navigate('/clanovi/novi')}
-          sx={{ backgroundColor: '#1a237e' }}>
+          sx={{ backgroundColor: '#0d2b4e', borderRadius: 2, '&:hover': { backgroundColor: '#1a5276' } }}>
           Novi član
         </Button>
       </Box>
@@ -43,8 +53,9 @@ export default function ClanListPage() {
           fullWidth
           placeholder="Pretraži po imenu, prezimenu ili ID-u..."
           value={kriterijum}
-          onChange={(e) => setKriterijum(e.target.value)}
+          onChange={handlePromena}
           onKeyDown={(e) => e.key === 'Enter' && pretrazi()}
+          sx={{ '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
           slotProps={{
             input: {
               startAdornment: (
@@ -54,15 +65,15 @@ export default function ClanListPage() {
           }}
         />
         <Button variant="contained" onClick={pretrazi} disabled={loading}
-          sx={{ backgroundColor: '#1a237e', minWidth: 120 }}>
+          sx={{ backgroundColor: '#2ec4b6', minWidth: 120, borderRadius: 2, '&:hover': { backgroundColor: '#25a99d' } }}>
           Pretraži
         </Button>
       </Box>
 
       {clanovi.length > 0 && (
-        <TableContainer component={Paper} elevation={2}>
+        <TableContainer component={Paper} elevation={0} sx={{ border: '1px solid #e0e0e0', borderRadius: 2 }}>
           <Table>
-            <TableHead sx={{ backgroundColor: '#e8eaf6' }}>
+            <TableHead sx={{ backgroundColor: '#f0faf9' }}>
               <TableRow>
                 <TableCell><b>ID</b></TableCell>
                 <TableCell><b>Ime i prezime</b></TableCell>
@@ -76,16 +87,18 @@ export default function ClanListPage() {
               {clanovi.map((clan) => (
                 <TableRow key={clan.id} hover>
                   <TableCell>{clan.id}</TableCell>
-                  <TableCell>{clan.ime} {clan.prezime}</TableCell>
+                  <TableCell sx={{ fontWeight: 600 }}>{clan.ime} {clan.prezime}</TableCell>
                   <TableCell>{clan.email}</TableCell>
                   <TableCell>{clan.telefon}</TableCell>
                   <TableCell>
                     {clan.trenerImePrezime
-                      ? <Chip label={clan.trenerImePrezime} size="small" color="primary" />
+                      ? <Chip label={clan.trenerImePrezime} size="small" sx={{ backgroundColor: '#e8f8f7', color: '#0e6655' }} />
                       : <Chip label="Bez trenera" size="small" variant="outlined" />}
                   </TableCell>
                   <TableCell>
-                    <Button size="small" onClick={() => navigate(`/clanovi/${clan.id}`)}>
+                    <Button size="small" variant="outlined"
+                      onClick={() => navigate(`/clanovi/${clan.id}`)}
+                      sx={{ borderColor: '#0d2b4e', color: '#0d2b4e', borderRadius: 2 }}>
                       Profil
                     </Button>
                   </TableCell>
@@ -94,12 +107,6 @@ export default function ClanListPage() {
             </TableBody>
           </Table>
         </TableContainer>
-      )}
-
-      {clanovi.length === 0 && kriterijum && !loading && (
-        <Typography sx={{ color: 'text.secondary', textAlign: 'center', mt: 4 }}>
-          Nije pronađen nijedan član za "{kriterijum}"
-        </Typography>
       )}
     </Container>
   )
