@@ -20,3 +20,6 @@ export const dodeliTrenera = (id: number, idTrenera: number) =>
 
 export const ukloniTrenera = (id: number) =>
   api.delete(`/clanovi/${id}/trenera`);
+
+export const getSviClanovi = () =>
+  api.get('/clanovi')

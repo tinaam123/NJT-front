@@ -49,10 +49,11 @@ export default function ClanFormPage() {
     try {
       if (isEdit) {
         await izmeniClana(Number(id), forma)
+        navigate(`/clanovi/${id}`)
       } else {
-        await registrujClana(forma)
+        const res = await registrujClana(forma)
+        navigate(`/clanovi/${res.data.id}`)
       }
-      navigate('/clanovi')
     } catch (err: any) {
       setGreska(err.response?.data?.message || 'Došlo je do greške.')
     } finally {
@@ -62,8 +63,8 @@ export default function ClanFormPage() {
 
   return (
     <Container maxWidth="md" sx={{ mt: 4 }}>
-      <Paper elevation={3} sx={{ p: 4 }}>
-        <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 3 }}>
+      <Paper elevation={0} sx={{ p: 4, border: '1px solid #e0e0e0', borderRadius: 3 }}>
+        <Typography variant="h5" sx={{ fontWeight: 'bold', mb: 3, color: '#0d2b4e' }}>
           {isEdit ? 'Izmeni člana' : 'Registracija novog člana'}
         </Typography>
 
@@ -106,7 +107,7 @@ export default function ClanFormPage() {
         <Box sx={{ display: 'flex', gap: 2, mt: 4, justifyContent: 'flex-end' }}>
           <Button variant="outlined" onClick={() => navigate(-1)}>Otkaži</Button>
           <Button variant="contained" onClick={handleSubmit} disabled={loading}
-            sx={{ backgroundColor: '#1a237e' }}>
+            sx={{ backgroundColor: '#0d2b4e', borderRadius: 2, '&:hover': { backgroundColor: '#1a5276' } }}>
             {isEdit ? 'Sačuvaj izmene' : 'Registruj člana'}
           </Button>
         </Box>

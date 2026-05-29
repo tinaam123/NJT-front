@@ -99,6 +99,7 @@ export default function RuteListPage() {
               <TableCell><b>Postavljač</b></TableCell>
               <TableCell><b>Datum postavljanja</b></TableCell>
               <TableCell><b>Pokušaji</b></TableCell>
+              <TableCell><b>Uspešni</b></TableCell>
               <TableCell><b>Status</b></TableCell>
               <TableCell><b>Akcije</b></TableCell>
             </TableRow>
@@ -128,7 +129,22 @@ export default function RuteListPage() {
                 </TableCell>
                 <TableCell>{ruta.postavljac || '—'}</TableCell>
                 <TableCell>{ruta.datumPostavljanja || '—'}</TableCell>
-                <TableCell>{ruta.brojPokusaja}</TableCell>
+                <TableCell>
+                  <Chip
+                    label={ruta.brojPokusaja}
+                    size="small"
+                    variant="outlined"
+                    sx={{ fontWeight: 600 }}
+                  />
+                </TableCell>
+                <TableCell>
+                  <Chip
+                    label={`✓ ${ruta.brojUspelihPokusaja}`}
+                    size="small"
+                    color={ruta.brojUspelihPokusaja > 0 ? 'success' : 'default'}
+                    variant={ruta.brojUspelihPokusaja > 0 ? 'filled' : 'outlined'}
+                  />
+                </TableCell>
                 <TableCell>
                   <Chip
                     label={ruta.aktivna ? 'Aktivna' : 'Neaktivna'}
@@ -160,7 +176,7 @@ export default function RuteListPage() {
             ))}
             {filtrirane.length === 0 && (
               <TableRow>
-                <TableCell colSpan={11} sx={{ textAlign: 'center', py: 4, color: '#888' }}>
+                <TableCell colSpan={12} sx={{ textAlign: 'center', py: 4, color: '#888' }}>
                   Nema ruta za prikaz.
                 </TableCell>
               </TableRow>

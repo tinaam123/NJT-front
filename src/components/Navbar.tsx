@@ -7,6 +7,13 @@ export default function Navbar() {
 
   const isActive = (path: string) => location.pathname.startsWith(path)
 
+const handleLogout = () => {
+  localStorage.removeItem('token')
+  localStorage.removeItem('role')
+  localStorage.removeItem('clanId')
+  window.location.href = '/login'  // koristimo window.location umesto navigate
+}
+
   const navItems = [
     { label: 'Članovi', path: '/clanovi' },
     { label: 'Rute', path: '/rute' },
@@ -33,7 +40,7 @@ export default function Navbar() {
           </Typography>
         </Box>
 
-        <Box sx={{ display: 'flex', gap: 0.5 }}>
+        <Box sx={{ display: 'flex', alignItems: 'center', gap: 0.5 }}>
           {navItems.map(item => (
             <Button key={item.path}
               onClick={() => navigate(item.path)}
@@ -49,6 +56,24 @@ export default function Navbar() {
               {item.label}
             </Button>
           ))}
+
+          <Button
+            onClick={handleLogout}
+            sx={{
+              color: 'rgba(255,255,255,0.7)',
+              borderRadius: 2,
+              px: 2,
+              ml: 2,
+              fontSize: 14,
+              border: '1px solid rgba(255,255,255,0.3)',
+              '&:hover': {
+                color: '#ff6b6b',
+                borderColor: '#ff6b6b',
+                backgroundColor: 'transparent'
+              }
+            }}>
+            Odjavi se
+          </Button>
         </Box>
       </Toolbar>
     </AppBar>
