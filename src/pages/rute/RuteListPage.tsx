@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Box, Button, Chip, Container, MenuItem, Paper, Table, TableBody,
+  Box, Button, Chip, Container, InputAdornment, MenuItem, Paper, Table, TableBody,
   TableCell, TableContainer, TableHead, TableRow, TextField, Typography, Alert
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
+import SearchIcon from '@mui/icons-material/Search'
 import { getSveRute, getAktivneRute, deaktivirajRutu, obrisiRutu } from '../../api/rutaApi'
 
 const KATEGORIJE = ['BOULDERING', 'TOP_ROPE', 'LEAD', 'SPEED', 'KILTER']
@@ -22,6 +23,7 @@ export default function RuteListPage() {
   const [rute, setRute] = useState<any[]>([])
   const [filter, setFilter] = useState('SVE')
   const [kategorijaFilter, setKategorijaFilter] = useState('')
+  const [pretraga, setPretraga] = useState('')
   const [greska, setGreska] = useState('')
 
   const ucitaj = async () => {
@@ -54,9 +56,16 @@ export default function RuteListPage() {
     }
   }
 
-  const filtrirane = kategorijaFilter
-    ? rute.filter(r => r.kategorija === kategorijaFilter)
-    : rute
+  const filtrirane = rute.filter(r => {
+    const q = pretraga.toLowerCase()
+    const matchPretraga =
+      r.naziv?.toLowerCase().includes(q) ||
+      r.postavljac?.toLowerCase().includes(q) ||
+      r.lokacija?.toLowerCase().includes(q) ||
+      r.tezina?.toLowerCase().includes(q)
+    const matchKategorija = kategorijaFilter ? r.kategorija === kategorijaFilter : true
+    return matchPretraga && matchKategorija
+  })
 
   return (
     <Container maxWidth="xl" sx={{ mt: 4 }}>
@@ -72,12 +81,24 @@ export default function RuteListPage() {
       {greska && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setGreska('')}>{greska}</Alert>}
 
       <Box sx={{ display: 'flex', gap: 2, mb: 3, flexWrap: 'wrap' }}>
+        <TextField
+          sx={{ flexGrow: 1, minWidth: 220, '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+          placeholder="Pretraži po nazivu, postavljaču, lokaciji, težini..."
+          value={pretraga}
+          onChange={e => setPretraga(e.target.value)}
+          slotProps={{
+            input: {
+              startAdornment: (
+                <InputAdornment position="start"><SearchIcon /></InputAdornment>
+              )
+            }
+          }}
+        />
         <TextField select label="Prikaz" value={filter}
           onChange={e => setFilter(e.target.value)} sx={{ minWidth: 150 }}>
           <MenuItem value="SVE">Sve rute</MenuItem>
           <MenuItem value="AKTIVNE">Samo aktivne</MenuItem>
         </TextField>
-
         <TextField select label="Kategorija" value={kategorijaFilter}
           onChange={e => setKategorijaFilter(e.target.value)} sx={{ minWidth: 160 }}>
           <MenuItem value="">Sve kategorije</MenuItem>
@@ -130,12 +151,8 @@ export default function RuteListPage() {
                 <TableCell>{ruta.postavljac || '—'}</TableCell>
                 <TableCell>{ruta.datumPostavljanja || '—'}</TableCell>
                 <TableCell>
-                  <Chip
-                    label={ruta.brojPokusaja}
-                    size="small"
-                    variant="outlined"
-                    sx={{ fontWeight: 600 }}
-                  />
+                  <Chip label={ruta.brojPokusaja} size="small"
+                    variant="outlined" sx={{ fontWeight: 600 }} />
                 </TableCell>
                 <TableCell>
                   <Chip
@@ -146,10 +163,8 @@ export default function RuteListPage() {
                   />
                 </TableCell>
                 <TableCell>
-                  <Chip
-                    label={ruta.aktivna ? 'Aktivna' : 'Neaktivna'}
-                    color={ruta.aktivna ? 'success' : 'default'}
-                    size="small" />
+                  <Chip label={ruta.aktivna ? 'Aktivna' : 'Neaktivna'}
+                    color={ruta.aktivna ? 'success' : 'default'} size="small" />
                 </TableCell>
                 <TableCell>
                   <Box sx={{ display: 'flex', gap: 1 }}>

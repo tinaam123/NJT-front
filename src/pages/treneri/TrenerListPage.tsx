@@ -1,15 +1,17 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Box, Button, Chip, Container, Paper, Table, TableBody,
-  TableCell, TableContainer, TableHead, TableRow, Typography, Alert
+  Box, Button, Chip, Container, InputAdornment, Paper, Table, TableBody,
+  TableCell, TableContainer, TableHead, TableRow, TextField, Typography, Alert
 } from '@mui/material'
 import AddIcon from '@mui/icons-material/Add'
+import SearchIcon from '@mui/icons-material/Search'
 import { getSveTrenere, obrisiTrenera } from '../../api/trenerApi'
 
 export default function TreneriListPage() {
   const navigate = useNavigate()
   const [treneri, setTreneri] = useState<any[]>([])
+  const [pretraga, setPretraga] = useState('')
   const [greska, setGreska] = useState('')
 
   const ucitaj = async () => {
@@ -33,6 +35,16 @@ export default function TreneriListPage() {
     }
   }
 
+  const filtrirani = treneri.filter(t => {
+    const q = pretraga.toLowerCase()
+    return (
+      t.ime?.toLowerCase().includes(q) ||
+      t.prezime?.toLowerCase().includes(q) ||
+      t.specijalizacija?.toLowerCase().includes(q) ||
+      t.email?.toLowerCase().includes(q)
+    )
+  })
+
   return (
     <Container maxWidth="lg" sx={{ mt: 4 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 3 }}>
@@ -45,6 +57,21 @@ export default function TreneriListPage() {
       </Box>
 
       {greska && <Alert severity="error" sx={{ mb: 2 }} onClose={() => setGreska('')}>{greska}</Alert>}
+
+      <TextField
+        fullWidth
+        placeholder="Pretraži po imenu, prezimenu, specijalizaciji ili emailu..."
+        value={pretraga}
+        onChange={e => setPretraga(e.target.value)}
+        sx={{ mb: 3, '& .MuiOutlinedInput-root': { borderRadius: 2 } }}
+        slotProps={{
+          input: {
+            startAdornment: (
+              <InputAdornment position="start"><SearchIcon /></InputAdornment>
+            )
+          }
+        }}
+      />
 
       <TableContainer component={Paper} elevation={0}
         sx={{ border: '1px solid #e0e0e0', borderRadius: 2 }}>
@@ -63,7 +90,7 @@ export default function TreneriListPage() {
             </TableRow>
           </TableHead>
           <TableBody>
-            {treneri.map(trener => (
+            {filtrirani.map(trener => (
               <TableRow key={trener.id} hover>
                 <TableCell sx={{ fontWeight: 600 }}>{trener.ime} {trener.prezime}</TableCell>
                 <TableCell>{trener.specijalizacija || '—'}</TableCell>
@@ -98,7 +125,7 @@ export default function TreneriListPage() {
                 </TableCell>
               </TableRow>
             ))}
-            {treneri.length === 0 && (
+            {filtrirani.length === 0 && (
               <TableRow>
                 <TableCell colSpan={9} sx={{ textAlign: 'center', py: 4, color: '#888' }}>
                   Nema trenera za prikaz.

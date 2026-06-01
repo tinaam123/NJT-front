@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
 import { useNavigate } from 'react-router-dom'
 import {
-  Box, Button, Container, MenuItem, Paper, Table, TableBody, TableCell,
+  Box, Button, Container, Divider, MenuItem, Paper, Table, TableBody, TableCell,
   TableContainer, TableHead, TableRow, TextField, Typography, Alert, Chip
 } from '@mui/material'
 import { getAktivneRute } from '../../api/rutaApi'
 import { dodajPokusaj, getNapredak } from '../../api/pokusajApi'
+import { getClan } from '../../api/clanApi'
 
 const praznaForma = {
   rutaId: '',
@@ -18,23 +19,24 @@ export default function MojProfilPage() {
   const navigate = useNavigate()
   const [rute, setRute] = useState<any[]>([])
   const [napredak, setNapredak] = useState<any>(null)
+  const [clan, setClan] = useState<any>(null)
   const [forma, setForma] = useState(praznaForma)
   const [greska, setGreska] = useState('')
   const [uspeh, setUspeh] = useState('')
   const [loading, setLoading] = useState(false)
 
-  // Izvuci clanId iz tokena — backend /auth/me vraca username, 
-  // ali nam treba id pa cemo ga cuvati u localStorage pri loginu
   const clanId = localStorage.getItem('clanId')
 
   const ucitaj = async () => {
     try {
-      const [ruteRes, napredakRes] = await Promise.all([
+      const [ruteRes, napredakRes, clanRes] = await Promise.all([
         getAktivneRute(),
-        clanId ? getNapredak(Number(clanId)) : Promise.resolve({ data: null })
+        clanId ? getNapredak(Number(clanId)) : Promise.resolve({ data: null }),
+        clanId ? getClan(Number(clanId)) : Promise.resolve({ data: null })
       ])
       setRute(ruteRes.data)
       setNapredak(napredakRes.data)
+      setClan(clanRes.data)
     } catch {
       setGreska('Greška pri učitavanju podataka.')
     }
@@ -81,12 +83,53 @@ export default function MojProfilPage() {
     <Container maxWidth="lg" sx={{ mt: 4 }}>
       <Box sx={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', mb: 4 }}>
         <Typography variant="h4" sx={{ fontWeight: 'bold', color: '#0d2b4e' }}>
-          Moj profil
+          {clan ? `${clan.ime} ${clan.prezime}` : 'Moj profil'}
         </Typography>
         <Button variant="outlined" color="error" onClick={handleLogout} sx={{ borderRadius: 2 }}>
           Odjavi se
         </Button>
       </Box>
+
+      {/* Informacije o treneru */}
+      {clan && (
+        <Paper elevation={0} sx={{ p: 3, border: '1px solid #e0e0e0', borderRadius: 3, mb: 4 }}>
+          <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2, color: '#0d2b4e' }}>
+            Moj trener
+          </Typography>
+          {clan.trenerImePrezime ? (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Chip label={clan.trenerImePrezime} color="primary" sx={{ fontSize: 14, px: 1 }} />
+              <Typography variant="body2" sx={{ color: '#555' }}>
+                Dodeljen trener
+              </Typography>
+            </Box>
+          ) : (
+            <Box sx={{ display: 'flex', alignItems: 'center', gap: 2 }}>
+              <Chip label="Bez trenera" variant="outlined" />
+              <Typography variant="body2" sx={{ color: '#888' }}>
+                Trenutno nemate dodeljenog trenera. Kontaktirajte recepciju.
+              </Typography>
+            </Box>
+          )}
+
+          <Divider sx={{ my: 2 }} />
+
+          <Box sx={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
+            <Box>
+              <Typography variant="caption" sx={{ color: '#888' }}>Email</Typography>
+              <Typography variant="body2" sx={{ fontWeight: 500 }}>{clan.email || '—'}</Typography>
+            </Box>
+            <Box>
+              <Typography variant="caption" sx={{ color: '#888' }}>Telefon</Typography>
+              <Typography variant="body2" sx={{ fontWeight: 500 }}>{clan.telefon || '—'}</Typography>
+            </Box>
+            <Box>
+              <Typography variant="caption" sx={{ color: '#888' }}>Datum učlanjenja</Typography>
+              <Typography variant="body2" sx={{ fontWeight: 500 }}>{clan.datumUclanjanja || '—'}</Typography>
+            </Box>
+          </Box>
+        </Paper>
+      )}
 
       {/* Forma za dodavanje pokušaja */}
       <Paper elevation={0} sx={{ p: 3, border: '1px solid #e0e0e0', borderRadius: 3, mb: 4 }}>
@@ -129,10 +172,39 @@ export default function MojProfilPage() {
       {/* Moj napredak */}
       {napredak && (
         <>
-          <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 2, color: '#0d2b4e' }}>
-            Moj napredak — ukupno pokušaja: {napredak.ukupnoPokusaja} · savladano: {napredak.ukupnoSavladano}
+          <Typography variant="h6" sx={{ fontWeight: 'bold', mb: 3, color: '#0d2b4e' }}>
+            Moj napredak
           </Typography>
 
+          {/* Statistike kartice */}
+          <Box sx={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 2, mb: 4 }}>
+            {[
+              { label: 'Ukupno pokušaja', value: napredak.ukupnoPokusaja, color: '#e8f8f7' },
+              { label: 'Savladano', value: napredak.ukupnoSavladano, color: '#e8f8f7' },
+              {
+                label: 'Uspešnost',
+                value: napredak.ukupnoPokusaja > 0
+                  ? `${Math.round((napredak.ukupnoSavladano / napredak.ukupnoPokusaja) * 100)}%`
+                  : '—',
+                color: '#eaf2fb'
+              },
+              {
+                label: 'U napretku',
+                value: napredak.pokusaji?.filter((p: any) => !p.savladana).length ?? 0,
+                color: '#fef9e7'
+              },
+            ].map(({ label, value, color }) => (
+              <Paper key={label} elevation={0} sx={{
+                p: 3, borderRadius: 3, backgroundColor: color,
+                border: '1px solid #e0e0e0', textAlign: 'center'
+              }}>
+                <Typography variant="h3" sx={{ fontWeight: 800, color: '#0d2b4e' }}>{value}</Typography>
+                <Typography variant="body2" sx={{ color: '#666', mt: 0.5 }}>{label}</Typography>
+              </Paper>
+            ))}
+          </Box>
+
+          {/* Tabela pokušaja */}
           <TableContainer component={Paper} elevation={0}
             sx={{ border: '1px solid #e0e0e0', borderRadius: 2 }}>
             <Table>
@@ -164,6 +236,13 @@ export default function MojProfilPage() {
                     <TableCell>{p.napomena || '—'}</TableCell>
                   </TableRow>
                 ))}
+                {napredak.pokusaji?.length === 0 && (
+                  <TableRow>
+                    <TableCell colSpan={7} sx={{ textAlign: 'center', py: 4, color: '#888' }}>
+                      Nema evidentiranih pokušaja.
+                    </TableCell>
+                  </TableRow>
+                )}
               </TableBody>
             </Table>
           </TableContainer>
